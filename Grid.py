@@ -4,7 +4,7 @@ import numpy as np
 import random as rd
 import time
 
-class grid_environment():
+class GridWorld():
   def __init__(self,layout,obstacle=6,goal=15):
     self.num_states = layout[0]*layout[1]
     self.layout = layout
@@ -79,60 +79,12 @@ def calc_features(agent_coords,obstacle_coords,goal_coords,max_dist):
   feature2 = (np.linalg.norm(agent_coords-goal_coords))/(max_dist/6)
   return np.array([feature1,feature2])
 
-def forward_backard(transition_f,reward_f,start,goal,time_steps):
-  num_actions = transition_f.shape[0];num_states = transition_f.shape[1] 
-  z_actions = np.zeros([num_actions,num_states])
-  z_states = np.ones(num_states)*1.0e-20
-  timing = {}
-  #Backward - - - - - - - - - - - - - - - - - - - - - - - - - -
-  # Unormalised measure calculations done in log space to prevent nans
-  print "Backward"
-  tic = time.clock()
-  delta = 1
-  action_probs = np.ndarray([num_actions,num_states])
-  while delta > 0.001 or math.isnan(delta) == True:
-    prev = np.zeros((num_actions,num_states))
-    prev += action_probs
-    z_states[goal]+=1
-    for i in range(num_states):
-      for j in range(num_actions):
-        m = np.amax(z_states)
-        z_actions[j,i] =m+np.log(np.sum(transition_f[j,i,:]*np.exp(z_states-m))) + np.log(math.exp(reward_f[i]))
-    m = np.amax(z_actions)
-    z_states = m + np.log(np.sum(np.exp(z_actions-m),axis = 0))
-    toc = time.clock()
-   
-  #Action Probability Computation - - - - - - - - - - - - - - - -
-    action_probs= np.exp(z_actions-z_states)
-    delta = sum(sum(np.absolute(prev-action_probs)))
-    print delta
-  timing["Backward"] = toc-tic
-  #for i in range(num_states):
-    #print "Action Probs for state %s,%s,\n" %(i,action_probs[:,i])
-  #print "Unormalised state --------------> %s,\n"%z_states
-  #Forward - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  print "STARTING FORWARD ------------------->"
-  dt_states = 0.0625 * np.zeros([num_states,time_steps+1])
-  dt_states[start,0] =1 
-  t = []
-  for i in range(time_steps):
-    tic = time.clock()
-    for j in range(num_states):
-        dt_states[j,i+1] = np.sum(dt_states[:,i] * np.sum(action_probs * transition_f[:,:,j],axis=0))  
-    toc = time.clock()
-    t.append(toc - tic)
-  timing["Forward"] = max(t)
-  state_freq = np.sum(dt_states,axis = 1)
-  #print "State Frequencies %s,\n"%state_freq
-  #print "TIming", timing  
-  print "END Forward Backward Calculation------------------------------------------------------------"
-  return state_freq,timing
 
 if __name__ == "__main__":
   obstacle = 50
   goal = 99
   layout = [70,70]
-  env = grid_environment(layout,obstacle,goal)
+  env = GridWorld(layout,obstacle,goal)
   w_init = [-5,-10]
   w_init = w_init/np.linalg.norm(w_init)
   env.build_reward_function(w_init)

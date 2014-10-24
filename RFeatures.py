@@ -1,10 +1,9 @@
 import numpy as np
 import math
 
-def staticGroupSimple(max_distance,distance,orientation_group,orientation_target):
-	features = np.zeros(3)
-	features[0] = max_distance-distance
-	features[1] = math.cos(orientation_group) + 1
-	features[2] = -math.cos(orientation_target) +1
+def staticGroupSimple(distance,orientation_group,max_distance=7,):
+	features = np.zeros(2)
+	features[0] = math.exp(-(3-distance)**2)
+	features[1] = 0.5*(math.cos(orientation_group)+1)
 	return features
 
