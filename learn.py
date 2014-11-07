@@ -13,7 +13,7 @@ def extractStatistics(examples,model):
 	feature_diff_avg=0
 	likelihoods = np.zeros(len(examples))
 	for num,example in enumerate(examples):
-		action_probs,z_states =caus_ent_backward(model.transition_backward,model.transition_f,model.reward_f,example["end_state"],example["steps"],20,z_states)
+		action_probs,z_states =caus_ent_backward(model.transition_backward,model.transition_f,model.reward_f,example["end_state"],example["steps"],10,z_states)
 		state_frequencies= smart_forward(action_probs,model.transition_forward,model.transition_f,example["start_state"],example["steps"])
 		cumulative = 0
 		log_policy = np.log(action_probs)
@@ -35,7 +35,7 @@ w = [-1.03497617,-0.04944345,-0.0291642,-9.21098972,-18.18630619,-1.47331647,-4.
 model = Model(disc_model,w)
 #Load data ->
 print "Loading data"
-examples = extract_info(disc_model,150)
+examples = extract_info(disc_model,70)
 #Run forward Backward algorithm for MaxEnt IRL
 isayso = True
 iteration=0
@@ -51,7 +51,7 @@ train = examples[:-5]
 test = examples[-5:]
 likelihoods_train_all = []
 likelihoods_test_all = []
-for iteration in xrange(repeat)
+for iteration in xrange(repeat):
 	#np.random.shuffle(sequence)
 	grad_train,likelihood_train = extractStatistics(train,model)
 	grad_array.append(grad_train)
@@ -76,7 +76,7 @@ for iteration in xrange(repeat)
 	model.reward_f = model.buildRewardFunction()
 	print "THIS IS N",iteration
 
-f = open("data2.py","w")
+f = open("data3.py","w")
 f.write("\nsum_grad=%s"%str(sum_grad_array))
 f.write("\nsum_valid=%s"%str(sum_valid_array))
 f.write("\nlik_train=%s"%str(likelihoods_train_all))

@@ -43,7 +43,7 @@ def staticGroupSimple(state,action,duration = 0.1):
 		if (diff_x>0 and diff_y>0) or (diff_x >0 and diff_y<0):
 			ang =math.atan((diff_y)/(diff_x))
 		elif diff_x<0 and diff_y>0:
-			ang = math.pi - math.atan((diff_y)/(diff_x))
+			ang = math.pi + math.atan((diff_y)/(diff_x))
 		elif diff_x <0 and diff_y<0:
 			ang = math.atan((diff_y)/(diff_x)) - math.pi
 		elif diff_x ==0 and diff_y<0:

@@ -7,22 +7,19 @@ import time
 import scipy.spatial as spat
 from dataload import *
 class Model(object):
-	def __init__(self,discretisation,reward_weights,kin_model= staticGroupSimple,actions = {"linear" :np.array([0,0.1,0.2,0.3,0.4]),"angular" : np.arange(-0.5,0.5,0.1)}):
+	def __init__(self,discretisation,reward_weights,kin_model= staticGroupSimple):
 		self.disc = discretisation#discretisation model
-		self.actions = actions
 		self.kinematics = kin_model
 		self.w = reward_weights
-		self.transition_f = self.buildTransitionFunction(100,learn=True)
+		self.transition_f = self.buildTransitionFunction(50,learn=True)
 		self.feature_f = self.buildFeatureFunction()
 		self.reward_f = self.buildRewardFunction()
 		self.transition_smart()
 		self.actionSimilarity()
 	def buildTransitionFunction(self,bin_samples,learn =True):
-		tot_states =sum(self.disc.states_per_angle)
-		tot_actions = len(self.actions["linear"])*len(self.actions["angular"])
-		transition_f = np.zeros([tot_actions,tot_states,tot_states])
-		for i in range(tot_states):
-			for j in range(tot_actions):
+		transition_f = np.zeros([self.disc.tot_actions,self.disc.tot_states,self.disc.tot_states])
+		for i in range(self.disc.tot_states):
+			for j in range(self.disc.tot_actions):
 				bins = self.disc.stateToBins(i)
 				for k in range(bin_samples):
 					assert bin_samples != 0
@@ -31,9 +28,7 @@ class Model(object):
 					else:
 						samp = True
 					quantity = self.disc.binsToQuantity(bins,sample = samp)
-			 		angular_idx = int(math.floor(j/len(self.actions["linear"])))
-			 		linear_idx = int(j%len(self.actions["linear"]))
-					action = [self.actions["angular"][angular_idx],self.actions["linear"][linear_idx]]
+					action = self.disc.indexToAction(j)
 					next_quantity = self.kinematics(quantity,action)
 					next_state = self.disc.quantityToState(next_quantity)
 					transition_f[j,i,next_state] += 1
@@ -45,9 +40,7 @@ class Model(object):
 		return transition_f
 	def learnTransitionFunction(self):
 		examples = extract_info(self.disc,"Full")
-		tot_states =sum(self.disc.states_per_angle)
-		tot_actions = len(self.actions["linear"])*len(self.actions["angular"])
-		transition = np.zeros([tot_actions,tot_states,tot_states])
+		transition = np.zeros([self.disc.tot_actions,self.disc.tot_states,self.disc.tot_states])
 		for example in examples:
 		#print len(example["action_numbers"])
 			for n in xrange(example["steps"]-1):
@@ -69,7 +62,7 @@ class Model(object):
 		tot_states = sum(self.disc.states_per_angle)
 		for i in range(tot_states):
 			quantity = self.disc.binsToQuantity(self.disc.stateToBins(i))
-			features = rf.staticGroupBin(quantity[1],quantity[0]) #Still hacky. Need to find a solution to his
+			features = self.disc.quantityToFeature(quantity) #Still hacky. Need to find a solution to his
 			if i == 0: feature_f = np.zeros([tot_states,len(features)])
 			feature_f[i,:] = features
 		return feature_f
@@ -80,11 +73,10 @@ class Model(object):
 		return reward_f
 	def actionSimilarity(self):
 		all_actions = []
-		tot_actions = len(self.actions["linear"])*len(self.actions["angular"])
 		#maxdiff = sum([max(self.actions["linear"]-min(actions["linear"])),max(actions["angular"]-min(actions["angular"]))])
-		for linear in self.actions["linear"]:
-			for angular in self.actions["angular"]:
-				all_actions.append([linear,angular])
+		for i in range(self.disc.tot_actions):
+			action = self.disc.indexToAction(i)
+			all_actions.append(action)
 		dist = spat.distance.squareform(spat.distance.pdist(all_actions,"euclidean"))
 		maxx = np.amax(dist)
 		s = 0.1

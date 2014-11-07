@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from RFeatures import *
 
 def discretise(quantity,disc_vector):
 	#Returns the bin in which the quantity falls according to the discretisation vector
@@ -19,17 +20,21 @@ def discretise(quantity,disc_vector):
 			if quantity >= j[0] and quantity < j[1]:
 				return i
 class DiscModel(object): # Discretisation for non uniform polar discretisation
-	def __init__(self):
+	def __init__(self,actions = {"linear" :np.array([0,0.1,0.2,0.3,0.4]),"angular" : np.arange(-0.5,0.5,0.1)},featureFunc = staticGroupBin ):
 		distance = np.linspace(0,3,9) # Nine bins whatever the case
 		linear = np.array([0,0.1,0.35]) # Linear velocity bins
 		#target = np.linspace(0,2*math.pi,8) # Targer orientation bins
 		angular = np.array([-0.1,0,0.1]) # Angular velocity bins
 		angle = np.linspace(-math.pi,math.pi,17)[0:16] # Angle to persons bins
 		actions_linear = [0,0.5,0.25]
+		self.featureFunc = featureFunc
+		self.actions = actions#these are in the form of a dictionary
 		self.bin_info = [angle,distance,angular,linear]
 		self.dist_bins_per_angle = [9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9]
 		self.get_dims()
 		self.statesPerAngle()
+		self.tot_states =sum(self.states_per_angle)
+		self.tot_actions = len(self.actions["linear"])*len(self.actions["angular"])
 	def get_dims(self):
 		self.dims = []
 		for j in self.bin_info:self.dims.append( len(j))
@@ -97,4 +102,17 @@ class DiscModel(object): # Discretisation for non uniform polar discretisation
 	def quantityToState(self,quantity):
 		bins = self.quantityToBins(quantity)
 		return self.binsToState(bins)
+	def actionToIndex(self,action):
+		linear_idx = discretise(action[1],self.actions["linear"])
+		angular_idx = discretise(action[0],self.actions["angular"])
+		return linear_idx + angular_idx*len(self.actions["linear"])
+	def indexToAction(self,index):
+		angular_idx = int(math.floor(index/len(self.actions["linear"])))
+		linear_idx = int(index%len(self.actions["linear"]))
+		return [self.actions["angular"][angular_idx],self.actions["linear"][linear_idx]]
+	def quantityToFeature(self,state,action=None):
+		if action == None:feature = self.featureFunc(state)
+		else: feature = self.featureFunc(state,action)
+		return feature
+		
 

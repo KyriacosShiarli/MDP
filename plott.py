@@ -21,4 +21,6 @@ def plot_from_file(filename):
 	axarr[1].set_xlabel("Iterations")
 	plt.show()
 
+plot_from_file("data_30iternormalTransition70steps.py")
 plot_from_file("data_30iterLearnedTransition70teps.py")
+plot_from_file("data2.py")
