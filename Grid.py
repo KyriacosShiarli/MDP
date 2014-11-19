@@ -75,8 +75,8 @@ def coordinate_to_state(coord,layout):
   return state
 
 def calc_features(agent_coords,obstacle_coords,goal_coords,max_dist):
-  feature1 = (max_dist - np.linalg.norm(agent_coords-obstacle_coords))/(max_dist/5)
-  feature2 = (np.linalg.norm(agent_coords-goal_coords))/(max_dist/5)
+  feature1 = (max_dist - np.linalg.norm(agent_coords-obstacle_coords))/(max_dist/6)
+  feature2 = (np.linalg.norm(agent_coords-goal_coords))/(max_dist/6)
   return np.array([feature1,feature2])
 
 def forward_backard(transition_f,reward_f,start,goal,time_steps):
@@ -85,11 +85,12 @@ def forward_backard(transition_f,reward_f,start,goal,time_steps):
   z_states = np.ones(num_states)*1.0e-20
   timing = {}
   #Backward - - - - - - - - - - - - - - - - - - - - - - - - - -
+  # Unormalised measure calculations done in log space to prevent nans
   print "Backward"
   tic = time.clock()
   delta = 1
   action_probs = np.ndarray([num_actions,num_states])
-  while delta > 0.001:
+  while delta > 0.001 or math.isnan(delta) == True:
     prev = np.zeros((num_actions,num_states))
     prev += action_probs
     z_states[goal]+=1
@@ -104,7 +105,8 @@ def forward_backard(transition_f,reward_f,start,goal,time_steps):
   #Action Probability Computation - - - - - - - - - - - - - - - -
     action_probs= np.exp(z_actions-z_states)
     delta = sum(sum(np.absolute(prev-action_probs)))
-  timing["backward"] = toc-tic
+    print delta
+  timing["Backward"] = toc-tic
   #for i in range(num_states):
     #print "Action Probs for state %s,%s,\n" %(i,action_probs[:,i])
   #print "Unormalised state --------------> %s,\n"%z_states
@@ -119,34 +121,35 @@ def forward_backard(transition_f,reward_f,start,goal,time_steps):
         dt_states[j,i+1] = np.sum(dt_states[:,i] * np.sum(action_probs * transition_f[:,:,j],axis=0))  
     toc = time.clock()
     t.append(toc - tic)
-  timing["forward p timestep"] = sum(t)/len(t)
+  timing["Forward"] = max(t)
   state_freq = np.sum(dt_states,axis = 1)
   #print "State Frequencies %s,\n"%state_freq
-  print "TIming", timing  
+  #print "TIming", timing  
+  print "END Forward Backward Calculation------------------------------------------------------------"
   return state_freq,timing
 
 if __name__ == "__main__":
   obstacle = 50
   goal = 99
-  layout = [60,60]
+  layout = [70,70]
   env = grid_environment(layout,obstacle,goal)
   w_init = [-5,-10]
   w_init = w_init/np.linalg.norm(w_init)
   env.build_reward_function(w_init)
-  freq = forward_backard(env.transition_f,env.reward_f,0,goal,3)
+  freq,t = forward_backard(env.transition_f,env.reward_f,0,goal,99)
 
 
   o_coord = state_to_coordinate(obstacle,layout)
   g_coord = state_to_coordinate(goal,layout)
 
-  w = [10,-0.7]
+  w = [-26,-1]
   grad_prev = 0
   for k in range(200):
     print "INITIAL",w_init
     w = w/np.linalg.norm(w)
     print "Iterarion ----------->", k
     env.build_reward_function(w)
-    freq2,t = forward_backard(env.transition_f,env.reward_f,0,goal,3)
+    freq2,t = forward_backard(env.transition_f,env.reward_f,0,goal,99)
     cumulative1 = np.zeros(2)
     cumulative2 = np.zeros(2)
     for i,j in enumerate(freq):
@@ -157,7 +160,8 @@ if __name__ == "__main__":
 
     print cumulative1,cumulative2
     print cumulative1-cumulative2
-    w = w + 0.04*(cumulative1-cumulative2) + 0.01*grad_prev
+    gamma = 0.01 * k**2
+    w = w * np.exp(-gamma*(cumulative1-cumulative2))
     w = w/np.linalg.norm(w)
     grad_prev = cumulative1-cumulative2
     print "W = ",w
