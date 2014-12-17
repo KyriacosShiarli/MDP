@@ -30,12 +30,19 @@ def binFeatures(disctetisation,state):
 		else: out = np.append(out,temp)
 	return out
 
-def tile_code_features(disctetisation,state,action):
+def tile_code_features(state_disc,action_disc,state,action):
 	out = None
-	for n,disc in enumerate(disctetisation):
+	for n,disc in enumerate(state_disc):
 		bin = discretise_with_overlap(state[n],disc)
+		bin/=np.sum(bin)
 		if out==None:out = bin
 		else: out = np.append(out,bin)
+	if action_disc !=None:
+		for n,disc in enumerate(action_disc):
+			bin = discretise_with_overlap(action[n],disc)
+			bin/=np.sum(bin)
+			if out==None:out = bin
+			else: out = np.append(out,bin)
 	return out
 
 def tile_code_features_action(disctetisation,state,action):
@@ -49,5 +56,5 @@ def continouous(ignore,state,action):
 	return np.array([state[0],state[1],action[0],action[1]])
 
 if __name__ == "__main__":
-	out = continouous([4,3,2,1],[1,2])
+	out = continouous(1,[4,3,2,1],[1,2])
 	print out

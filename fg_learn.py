@@ -15,7 +15,7 @@ feat = {"function":continouous,"inputs":None}
 disc_model = DiscModel(feature = feat)
 model = Model_non_linear(disc_model)
 examples,distribution = extract_info(disc_model,10,dist = True)
-policy=caus_ent_backward(model.transition,model.reward_f,examples[1]["end_state"],10)
+policy,lg=caus_ent_backward(model.transition,model.reward_f,examples[1]["end_state"],10)
 start_states=[example["start_state"] for example in examples]
 state_freq,state_action_frequencies= forward_sa(policy,model.transition,start_states,10)
 avg_counts = np.zeros([disc_model.tot_actions,disc_model.tot_states])

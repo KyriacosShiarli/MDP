@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from dataload import loadFile,loadFile2
+from fg_gradient import adaboost_reg
+
 def learn_tran():
 	examples = loadFile2()
 	examples2 = loadFile()
@@ -10,21 +12,48 @@ def learn_tran():
 	disc = DiscModel()
 	unorm_transition_f = np.zeros([disc.tot_actions,disc.tot_states,disc.tot_states])
 	for example in tot_examples:
-		for i in range(len(example["states"])-1):
-			state = disc.quantityToState(example["states"][i])
-			action = disc.actionToIndex(example["actions"][i])
-			next = disc.quantityToState(example["states"][i+1])
+		for i in range(len(example.states)-1):
+			state = disc.quantityToState(example.states[i])
+			action = disc.actionToIndex(example.actions[i])
+			next = disc.quantityToState(example.states[i+1])
 			unorm_transition_f[action,state,next]+=1
 	return unorm_transition_f
+
+def learn_tran_regression(num_learners,tree_depth):
+	#learns a transition function from data using adaboost.
+	#------------------------------------------------------
+	#Load all data
+	examples = loadFile2()
+	examples2 = loadFile()
+	tot_examples = examples + examples2
+	#Folds get generated here
+	train_examples = tot_examples
+	#test_examples = tot_examples[-2::]
+	dimensions = examples[0].states.shape[1]
+	#Build X which is the same for all regressors
+	estimators = []	
+
+	X =np.concatenate([np.hstack((example.states[:-1,:],example.actions[:-1,:])) for example in train_examples],axis = 0)
+	y =np.concatenate([example.states[1:,:] for example in train_examples],axis = 0)
+
+
+	estimators = [adaboost_reg(X,y[:,i],num_learners,tree_depth) for i in range(dimensions)]
+	
+	return estimators
+
+def predict_next(state,action,estimators):
+	sa = np.hstack((state,action))
+	return np.concatenate([estimator.predict([sa]) for estimator in estimators])
+
 
 def loss_augmentation(amount):
 	examples = loadFile()
 	disc = DiscModel()
 	loss_aug = np.ones([disc.tot_states])*amount
 	for example in examples:
-		for step in range(len(example["states"])):
-			state = disc.quantityToState(example["states"][step])
-			action = disc.actionToIndex(example["actions"][step])
+		for step in range(len(example.states)):
+			state = disc.quantityToState(example.states[step])
+			action = disc.actionToIndex(example.actions[step])
 			loss_aug[state] = 1
 	return loss_aug
 
@@ -56,6 +85,12 @@ greed_patch = mpatches.Patch(color='green', label='Good',alpha = 0.5)
 plt.legend([h1,h2],["bad","good"],bbox_to_anchor=(1., 1,0.,-0.06),loc=1)
 plt.show()
 '''
+if __name__ == "__main__":
+	est = learn_tran_regression(20,10)
+	state = np.array([1,2,0.1,0.4])
+	action = np.array([0.3,0.4])
+	out = predict_next(state,action,est)
+	print out
 
 
 
