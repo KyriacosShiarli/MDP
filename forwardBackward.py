@@ -123,13 +123,12 @@ def caus_ent_backward(transition,reward_f,goal,steps,conv=0.1,z_states = None):
       #print delta
       #print "DElta cause",delta,delta2
       if delta ==steps:
-        z_actions = z_actions/1.2
+        z_actions = z_actions
+        m = np.amax(z_actions)
         z_states = m + np.log(np.sum(np.exp(z_actions-m),axis = 0))
         policy= np.exp(z_actions-z_states)
         break
     return policy,np.log(policy)
-
-
 
 def q_rollout(transition_backward,transition_f,reward_f,duration):
   num_actions = transition.tot_actions;num_states = transition.tot_states
@@ -142,3 +141,7 @@ def q_rollout(transition_backward,transition_f,reward_f,duration):
           val = transition.backward[j + i*num_actions].values()
           q_roll[i,j] = np.sum(np.array(val)*q_roll[i,keys]) +reward_f[i]
   return q_roll
+
+if __name__=="main":
+  x = 5
+

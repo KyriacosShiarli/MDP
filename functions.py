@@ -1,5 +1,7 @@
 
 from itertools import compress
+import math
+import numpy as np
 
 def getFolds(examples,k,idx):
 	ran = range(0,len(examples),k)
@@ -11,3 +13,51 @@ def getFolds(examples,k,idx):
 def momentum(current,previous,decay):
 	new = current + decay*previous
 	return new
+
+def angle_half_to_full(inp):
+	#transforms vector from half angle mode to full angle mode
+	assert inp<=math.pi,"not an angle" ; assert inp>=-math.pi,"not an angle"
+	if inp <0:
+		inp += 2*math.pi
+	return inp
+
+def angle_full_to_half(inp):
+	#transforms vector from half angle mode to full angle mode
+	assert inp<=2*math.pi,"not an angle" ; assert inp>=0,"not an angle"
+	if inp>math.pi:
+		inp -= 2*math.pi
+	return inp
+def polar_to_cartesian(theta,distance):
+	x = distance * np.cos(theta)
+	y = distance * np.sin(theta)
+	return x,y
+def cartesian_to_polar(x,y):
+	distance = np.sqrt(x*x + y*y)
+	theta = np.array([arctan_correct(x[i],y[i]) for i in xrange(len(x))])
+	return np.array(zip(theta,distance))
+def c_o_m(persons_in_polar):
+	#print persons_in_polar[0][:,1]
+	cartesian =np.array([np.array(polar_to_cartesian(p[:,0],p[:,1])) for  p in persons_in_polar])
+	car_com = np.sum(cartesian,axis = 0)/len(persons_in_polar)
+	return cartesian_to_polar(car_com[0],car_com[1])
+def arctan_correct(x,y):
+	if x<0 and y<0:
+		return np.arctan(y/x)- math.pi
+	if x<0 and y>0:
+		return np.arctan(y/x)+math.pi
+	else:
+		return np.arctan(y/x)
+
+
+
+
+if __name__ == "__main__":
+	#test =  np.arange(-math.pi,math.pi,0.1)
+
+
+	#out = map (angle_half_to_full,test)
+	#out2 = map (angle_full_to_half,out)
+	#print test - out2
+	persons = [[math.pi/2,3],[-math.pi/2,3]]
+	out = c_o_m(persons)
+	print out

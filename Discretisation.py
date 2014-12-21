@@ -24,10 +24,10 @@ def discretise_with_overlap(quantity,disc_vector):
 	out = np.zeros(len(disc_vector))
 	size = disc_vector.shape[0]
 	for i in range(len(disc_vector)):
-		assert disc_vector[i,0]<=disc_vector[i,1] # 1D Discretisation vector should be increasing
+		assert disc_vector[i,0]<=disc_vector[i,1], "%s"%disc_vector[i,0] # 1D Discretisation vector should be increasing
 		if quantity >= disc_vector[i,0] and quantity < disc_vector[i,1]:
 			out[i] = 1
-		if i == (size - 1) and quantity > disc_vector[i,1]:
+		if i == (size - 1) and quantity >= disc_vector[i,1]:
 			out[i]=1
 	return out
 		

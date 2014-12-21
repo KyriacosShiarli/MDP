@@ -48,18 +48,16 @@ class Model(object):
 						samp = True
 					quantity = self.disc.binsToQuantity(bins,sample = samp)
 					action = self.disc.indexToAction(j)
-					next_quantity = staticGroupSimple(quantity,action)
-
-					next_quantity2 = staticGroupSimple2(quantity,action)
+					next_quantity = staticGroupSimple2(quantity,action)
+					#next_quantity2 = staticGroupSimple2(quantity,action)
 					#if np.sum(next_quantity[:1]-next_quantity2[:1])>1:
 					#	print "Quantity",quantity
 					#	print "ACTION",action
 					#	print next_quantity[:2],next_quantity2[:2]
 					next_state = self.disc.quantityToState(next_quantity)
-					next2 = self.disc.quantityToState(next_quantity2)
+					#next2 = self.disc.quantityToState(next_quantity2)
 					#print "state",i
 					#print "actions",j
-					
 					transition_f[j,i,next_state] += 1
 		if learn ==True:
 			trans = learn_tran()

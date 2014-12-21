@@ -40,7 +40,7 @@ def trajectoryCompare(examples,steps,model,name):
 			action = np.random.choice(m.tot_actions,p=policy[:,prev_state])
 			keys = map(int,model.transition.backward[action + prev_state*m.tot_actions].keys())
 			val = model.transition.backward[action + prev_state*m.tot_actions].values()
-			next_state = keys[np.argmax(val)]
+			next_state =np.random.choice(keys,p=val) 
 			#plt.plot(policy[:,prev_state])
 			#plt.scatter(action,policy[action,prev_state])
 			#plt.show()

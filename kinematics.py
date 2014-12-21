@@ -62,7 +62,7 @@ def staticGroupSimple(state,action,duration = 0.1):
 	out[0] = orient ; out[1] = dist; out[2] = action[0] ; out[3] = action[1]
 	return out
 
-def staticGroupSimple2(state,action,duration = 0.1):
+def staticGroupSimple2(state,action,duration = 0.03):
 	def degug():
 		#action = [angular,linear]
 		print "dx",dx
@@ -102,5 +102,5 @@ def staticGroupSimple2(state,action,duration = 0.1):
 		orient -=math.copysign(2*math.pi,orient) 
 	dist = math.sqrt((diff_x)**2 + (diff_y)**2)
 	out = np.zeros(len(state))
-	out[0] = orient ; out[1] = dist; out[2] = action[0] ; out[3] = action[1]
+	out[0] = orient ; out[1] = dist; #out[2] = action[0] ; out[3] = action[1]
 	return out

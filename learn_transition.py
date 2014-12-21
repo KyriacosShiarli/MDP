@@ -2,19 +2,22 @@ from discretisationmodel import *
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from dataload import loadFile,loadFile2
+from dataload import loadFile,loadFile2,loadFile3
 from fg_gradient import adaboost_reg
 
 def learn_tran():
-	examples = loadFile2()
-	examples2 = loadFile()
-	tot_examples = examples + examples2
+	#examples = loadFile2()
+	#examples2 = loadFile()
+	examples3 = loadFile3("data/UPO/Experiments Folder/2014-11-17 11.08.31 AM/")
+	examples4 = loadFile3("data/UPO/Experiments Folder/2014-11-28 01.22.03 PM/") 
+	tot_examples  = examples3[:12] + examples4[:12]
+	#tot_examples = examples + examples2
 	disc = DiscModel()
 	unorm_transition_f = np.zeros([disc.tot_actions,disc.tot_states,disc.tot_states])
 	for example in tot_examples:
 		for i in range(len(example.states)-1):
 			state = disc.quantityToState(example.states[i])
-			action = disc.actionToIndex(example.actions[i])
+			action = disc.actionToIndex(example.actions[i+1])
 			next = disc.quantityToState(example.states[i+1])
 			unorm_transition_f[action,state,next]+=1
 	return unorm_transition_f

@@ -8,16 +8,16 @@ from learn_transition import learn_tran,loss_augmentation,learn_tran_regression,
 
 def plotNextState():
 	m = DiscModel()
-	next_data=np.zeros(4)
-	next_kinematics1 = np.zeros(4)
-	next_kinematics2 = np.zeros(4)
+	next_data=np.zeros(2)
+	next_kinematics1 = np.zeros(2)
+	next_kinematics2 = np.zeros(2)
 	examples = extract_info(m,"Full")
 	print len(examples)
 	for example in examples:
 		for j in range(len(example.states)):		
 			next_data = np.vstack([next_data,example.states[j]])
-			next_kinematics1 = np.vstack([next_kinematics1,staticGroupSimple(example.states[j-1],example.actions[j-1],0.1)])
-			next_kinematics2 = np.vstack([next_kinematics2,staticGroupSimple(example.states[j-1],example.actions[j])])
+			next_kinematics1 = np.vstack([next_kinematics1,staticGroupSimple2(example.states[j-1],example.actions[j-1],0.1)])
+			next_kinematics2 = np.vstack([next_kinematics2,staticGroupSimple2(example.states[j-1],example.actions[j])])
 	print next_data.shape
 	x = range(next_data.shape[0])
 	next_data = np.array(next_data)
@@ -40,30 +40,31 @@ def plotNextState():
 def plotDrift(idx,startpoint):
 	m = DiscModel()
 	examples = extract_info(m,"Full","good")
+
 	example = examples[idx]
- 
+ 	print example.states.shape
 	states_kin = np.array(example.states[startpoint])
 	states_kin2 =np.array(example.states[startpoint])
 	for n,i in enumerate(example.actions[startpoint:-1]):
 		if n == 0:
-			states_kin = np.vstack([states_kin,staticGroupSimple(states_kin,i)])
+			#states_kin = np.vstack([states_kin,staticGroupSimple(states_kin,i)])
 			states_kin2 = np.vstack([states_kin2,staticGroupSimple2(states_kin2,i)])
 		elif np.absolute(example.states[startpoint+n][0] -example.states[startpoint + n-1][0])>0.1:
-			states_kin = np.vstack([states_kin,example.states[startpoint+n]])	 
+			#states_kin = np.vstack([states_kin,example.states[startpoint+n]])	 
 			states_kin2 = np.vstack([states_kin2,example.states[startpoint+n]])	 
 		else:
-			states_kin = np.vstack([states_kin,staticGroupSimple(states_kin[n,:],example.actions[n-1])])
+			#states_kin = np.vstack([states_kin,staticGroupSimple(states_kin[n,:],example.actions[n-1])])
 			states_kin2 = np.vstack([states_kin2,staticGroupSimple2(states_kin2[n,:],example.actions[n-1])])
 	ex = np.array(example.states[startpoint::])
 	x = range(len(ex))
 	f, axarr = plt.subplots(2,sharex = True)
 	axarr[0].scatter(x,ex[:,1],color = "blue",label = "data")
-	axarr[0].scatter(x,states_kin[:,1],color = "green",alpha = 0.4, label = "kinematic")
+	#axarr[0].scatter(x,states_kin[:,1],color = "green",alpha = 0.4, label = "kinematic")
 	axarr[0].scatter(x,states_kin2[:,1],color = "red",alpha = 0.2, label = "kinematic2")
 	axarr[0].legend(bbox_to_anchor=(1., 1,0.,-0.06),loc=1)
 
 	axarr[1].scatter(x,ex[:,0],color = "blue")
-	axarr[1].scatter(x,states_kin[:,0],color = "green", alpha = 0.4)
+	#axarr[1].scatter(x,states_kin[:,0],color = "green", alpha = 0.4)
 	axarr[1].scatter(x,states_kin2[:,0],color = "red", alpha = 0.2)
 
 	axarr[1].set_ylabel("Angle/rad")
@@ -108,6 +109,7 @@ def plot_reg_drift(idx,startpoint):
 #-1.25042713, -1.15339101, -0.28474766, -0.34990737, -2.13778004,
  #-4.07049444])
 #trajectoryCompare(w_fold1)
-for i in range(15):
+for i in range(12):
 	plotDrift(i,0)
+
 plt.show()

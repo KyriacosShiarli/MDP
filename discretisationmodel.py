@@ -14,19 +14,19 @@ class featureModel(object):
 	#			"inputs":[np.array([-math.pi,-3*math.pi/4,-math.pi/2,-math.pi/4,0,math.pi/4,math.pi/2,3*math.pi/4]),np.array([0,0.5,1.5,2.5,3.5])]}
 state_disc= [np.array([[-math.pi,-3*math.pi/4],[-3*math.pi/4,-math.pi/2],[-math.pi/2,-math.pi/4],[-math.pi/4,-0.1],[-0.1,0.1],[0.1,math.pi/4],
 					[math.pi/4,math.pi/2],[math.pi/2,3*math.pi/4],[3*math.pi/4,math.pi]]),np.array([[0,0.5],[0.5,1],[1.,1.5],[1.5,2.0],[2,2.5],[2.5,3.]])]
-action_disc = [np.array([[-10,-0.1],[-0.1,0.1],[0.1,0.2]]),np.array([[0,0.2],[0.2,0.3]])]
-	
+#action_disc = [np.array([[-10,-0.2],[-0.2,-0.1],[-0.1,0.1],[0.1,0.2],[0.2,0.3]]),np.array([[0,0.2],[0.2,0.3],[0.3,0.4]])]
+action_disc = [np.array([[-100,0],[0,0.3],[0.3,0.4]]),np.array([[0,0.1],[0.1,0.4],[0.4,0.5]])]	
 class DiscModel(object): # Discretisation for non uniform polar discretisation
-	def __init__(self,actions = {"linear" :np.array([0,0.1,0.2,0.3,0.4]),"angular" : np.arange(-0.5,0.5,0.1)},feature =  featureModel(tile_code_features,state_disc,action_disc)):
-		distance = np.linspace(0,4,9) # Nine bins whatever the case
+	def __init__(self,actions = {"linear" :np.array([0,0.1,0.4]),"angular" : np.arange(-0.3,0.6,0.3)},feature =  featureModel(tile_code_features,state_disc,action_disc)):
+		distance = np.linspace(0,4,15) # Nine bins whatever the case
 		linear = np.array([0,0.1,0.35]) # Linear velocity bins
 		target = np.linspace(0,2*math.pi,8) # Targer orientation bins
 		angular = np.array([-0.1,0,0.1]) # Angular velocity bins
 		angle = np.linspace(-math.pi,math.pi,17)[0:16] # Angle to persons bins
 		self.feature = feature
 		self.actions = actions#these are in the form of a dictionary
-		self.bin_info = [angle,distance,angular,linear]
-		self.dist_bins_per_angle = [9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9]
+		self.bin_info = [angle,distance]
+		self.dist_bins_per_angle = [15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15]
 		self.get_dims()
 		self.statesPerAngle()
 		self.tot_states =sum(self.states_per_angle)

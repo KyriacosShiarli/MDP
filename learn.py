@@ -108,20 +108,21 @@ if __name__ == "__main__":
 	
 	#Initialise transition and reward model----------------------------------------------------------------------
 	disc_model = DiscModel()
-	w = [-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1,-1,-1.,-1.,-1,-1,-1.,-1.,-1]
+	w = [-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1,-1,-1.,-1.,-1,-1,-1]
 	#w = [-1.07934796, -1.22879963, -0.86149566, -0.94511367,-1, -0.91669579, -0.79592145, -1.17852044, -1.07693067, -1.16777957, -0.92090362, -0.94316211, -0.89168946, -0.97011397, -1.13973061, -1.49200411, -0.64497652, -1.03916874, -2.46957467, -0.40492803]
 
 	#w = [-1.01214617, -1.068654,   -0.91906589, -0.96951396, -0.9715242,  -0.94190164,-1.11025316, -1.02126335,-1.02232611, -0.95117768, -0.95785595, -1.07361531]
 	#w = [-1.02741917, -1.13913975, -0.86524108, -0.92597795, -0.934249,   -0.87620005,-1.2335044,  -1.05616296, -1.07439854, -0.94431928, -0.95122909, -0.92681191,-0.99206743, -1.12693225]
 	#w =[-1.,-0.2,-4.,-1.,-0.3,-1.,-1.,-1.,-0.3,-2.,-1.,-0.5,-1.,-3.]
 	model = Model(disc_model,w)
+
 	#Load data ->-----------------------------------------------------------------------------------------------
 	print "Loading data"
-	steps = 40
+	steps = 70
 	examples_good = extract_info(disc_model,steps,examples_type ="good")
 	examples_bad = extract_info(disc_model,steps,examples_type ="bad")
 	#Other Settings----------------------------------------------------------------------------------------------
-	iterations =10
+	iterations =15
 	gamma = 0.01
 	fol =6
 
@@ -133,7 +134,7 @@ if __name__ == "__main__":
 		n1 = "Fold %s init" %idx
 		trajectoryCompare(train_g,steps,model,n1)
 		#n1 = "Fold %s init bad" %idx
-		#trajectoryCompare(train_b,steps,model,n1)
+		#trajectoryCompare(train_b,steps,model,n1)s
 		learner = Learner(model,train_g,test_g,train_b,test_b)
 		learner(iterations,gamma,0.6,examples_type= "good")
 		#name = "Fold %s bad" %idx
@@ -156,4 +157,5 @@ if __name__ == "__main__":
 	#f.write("\nlik_train=%s"%str(lik_train))
 	#f.write("\nlik_test=%s"%str(lik_test))
 	#f.write("\nw_final=%s"%str(mod.w))
+	
 		
