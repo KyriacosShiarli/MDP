@@ -108,11 +108,18 @@ def loadFile3(name):
 					ex.states.append(map(float,al[0].split(','))[:2])
 			#		ex["states"][len(ex["states"])-1].pop(2)
 					ex.actions.append(map(float,al[1].split(',')))
-
 			ex.states = np.array(ex.states)
+			temp = subsample(ex.states[:,0],4)
+			temp = np.vstack([temp,subsample(ex.states[:,1],4)])			
+			ex.states = np.transpose(temp)
 			ex.actions = np.array(ex.actions)
 			ex.actions = action_filter(ex.actions)
+			temp = subsample(ex.actions[:,0],4)
+			temp = np.vstack([temp,subsample(ex.actions[:,1],4)])
+			ex.actions = np.transpose(temp)
 			examples.append(ex)
+			ex.states.shape
+			ex.actions.shape
 		def getKey(item):
 			return item.trajectory_number
 		examples = sorted(examples,key = getKey)
@@ -121,10 +128,11 @@ def loadFile3(name):
 	examples_p1 = examples_from_stream(open(name +"training_samples-person1.txt",'r'))
 	x = range(examples_p1[2].states.shape[0])
 	examples_p2 = examples_from_stream(open(name +"training_samples-person2.txt",'r'))
+	#examples_target = examples_from_stream(open(name +"training_samples-person3.txt",'r'))
 	#plt.scatter(x,examples_p1[2].states[:,0],color = "red")
 	for example1, example2 in itertools.izip_longest(examples_p1,examples_p2):
-		avg_ang =(np.array(map(angle_half_to_full,example1.states[:,0])) +np.array(map(angle_half_to_full,example2.states[:,0])))/2
 		example1.states =  c_o_m([example1.states,example2.states])
+		#example1.states = np.vstack(example1.states,examples_target.states)
 	
 
 		#example1.com =  np.array(com)
@@ -168,16 +176,18 @@ def extract_info(disc_model,num_samples,examples_type = "good"):
 			example.feature_sum += disc_model.quantityToFeature(state,example.actions[i])
 	return examples
 if __name__ =="__main__":
-	examples = loadFile3("data/UPO/Experiments Folder/2014-11-17 11.08.31 AM/")
-	for example in examples:
-		print "TRAJECTORY NUMBER------------->", example.trajectory_number
+	#examples = loadFile3("data/UPO/Experiments Folder/2014-11-17 11.08.31 AM/")
+	#for example in examples:
+	#	print "TRAJECTORY NUMBER------------->", example.trajectory_number
 		
 	
 	
-	#d = DiscModel()
-	##e = extract_info(d,70,"good")
-	#for ex in e:
-	#	print ex.trajectory_number
+	d = DiscModel()
+	e = extract_info(d,100,"good")
+	su = 0
+	for ex in e:
+		su+= ex.feature_sum
+	print su
 	#print examples
 	#x=5
 	#m = DiscModel()

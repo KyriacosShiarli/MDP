@@ -62,7 +62,7 @@ def staticGroupSimple(state,action,duration = 0.1):
 	out[0] = orient ; out[1] = dist; out[2] = action[0] ; out[3] = action[1]
 	return out
 
-def staticGroupSimple2(state,action,duration = 0.033):
+def staticGroupSimple2(state,action,duration = 0.129):
 	def degug():
 		#action = [angular,linear]
 		print "dx",dx

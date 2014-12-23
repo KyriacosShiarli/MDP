@@ -2,7 +2,7 @@
 from itertools import compress
 import math
 import numpy as np
-
+from scipy.stats import norm
 def getFolds(examples,k,idx):
 	ran = range(0,len(examples),k)
 	mask = [1]*len(examples)
@@ -48,8 +48,24 @@ def arctan_correct(x,y):
 	else:
 		return np.arctan(y/x)
 
-
-
+def subsample(sample_vector,factor,shape="ramp"):
+	length = factor
+	rv = norm(loc = 0., scale = 0.6)
+	le = float(len(sample_vector))
+	if (le/factor  - int(le/factor))<0.5 and (le/factor  - int(le/factor))!=0.0 :
+		center_idx = np.arange(factor,le-factor,factor)
+		new_vec = np.zeros(int(le/factor))
+	elif (le/factor  - int(le/factor))==0.0:
+		center_idx = np.arange(factor,le,factor)
+		new_vec = np.zeros(int(le/factor))
+	else:
+		center_idx = np.arange(factor,le,factor)
+		new_vec = np.zeros(int(le/factor)+1)
+	new_vec[0]= sample_vector[0]
+	for n, i in enumerate(center_idx):
+		for j in range(length):
+			new_vec[n+1]+=sample_vector[i-int(length/2)+j] * rv.pdf(-int(length/2)+j)
+	return new_vec
 
 if __name__ == "__main__":
 	#test =  np.arange(-math.pi,math.pi,0.1)
@@ -58,6 +74,8 @@ if __name__ == "__main__":
 	#out = map (angle_half_to_full,test)
 	#out2 = map (angle_full_to_half,out)
 	#print test - out2
-	persons = [[math.pi/2,3],[-math.pi/2,3]]
-	out = c_o_m(persons)
-	print out
+	for i in range(100,500):
+		print i
+		vector = np.arange(0,i,1)
+		out = subsample(vector,10)
+		print out

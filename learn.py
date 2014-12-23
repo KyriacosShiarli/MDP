@@ -40,7 +40,7 @@ class Learner(object):
 			likelihood/=len(examples)
 			return gradient,error,likelihood
 		#======================================================================================================
-		steps = train[1].steps
+		steps = train[0].steps
 		train_start_states = [(tr.start) for tr in train]
 		test_start_states = [(te.start) for te in test]
 		train_goals = [(tr.goal) for tr in train]
@@ -108,7 +108,7 @@ if __name__ == "__main__":
 	
 	#Initialise transition and reward model----------------------------------------------------------------------
 	disc_model = DiscModel()
-	w = [-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1,-1,-1.,-1.,-1,-1,-1]
+	w = [-1.,-0.6,-1.8,-1.5,-1.3,-1.2,-1.,-1.,-1.,-1.,-0.7,-1.,-1.,-1,-1,-1.,-1.,-1,-1,-1.,-1.,-0.6,-1,-1,-1]
 	#w = [-1.07934796, -1.22879963, -0.86149566, -0.94511367,-1, -0.91669579, -0.79592145, -1.17852044, -1.07693067, -1.16777957, -0.92090362, -0.94316211, -0.89168946, -0.97011397, -1.13973061, -1.49200411, -0.64497652, -1.03916874, -2.46957467, -0.40492803]
 
 	#w = [-1.01214617, -1.068654,   -0.91906589, -0.96951396, -0.9715242,  -0.94190164,-1.11025316, -1.02126335,-1.02232611, -0.95117768, -0.95785595, -1.07361531]
@@ -120,15 +120,15 @@ if __name__ == "__main__":
 	print "Loading data"
 	steps = 70
 	examples_good = extract_info(disc_model,steps,examples_type ="good")
-	examples_bad = extract_info(disc_model,steps,examples_type ="bad")
+	#examples_bad = extract_info(disc_model,steps,examples_type ="bad")
 	#Other Settings----------------------------------------------------------------------------------------------
-	iterations =15
+	iterations =10
 	gamma = 0.01
-	fol =6
-
+	fol =1
+	examples_good = examples_good[:2]
 	for idx in xrange(0,len(examples_good)/fol):
 		train_g,test_g = getFolds(examples_good,fol,idx)
-		train_b,test_b = getFolds(examples_bad,fol,idx)
+		train_b,test_b = getFolds(examples_good,fol,idx)
 		model.w = w
 		model.buildRewardFunction()
 		n1 = "Fold %s init" %idx
@@ -136,7 +136,7 @@ if __name__ == "__main__":
 		#n1 = "Fold %s init bad" %idx
 		#trajectoryCompare(train_b,steps,model,n1)s
 		learner = Learner(model,train_g,test_g,train_b,test_b)
-		learner(iterations,gamma,0.6,examples_type= "good")
+		learner(iterations,gamma,0.4,examples_type= "good")
 		#name = "Fold %s bad" %idx
 		#plot_result(learner.results_b.train_error,learner.results_b.test_error,learner.results_b.train_lik,learner.results_b.test_lik,name)
 		#n1 = name+"train" ; n2 = name + "test"

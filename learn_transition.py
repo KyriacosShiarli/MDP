@@ -37,13 +37,9 @@ def learn_tran_regression(num_learners,tree_depth):
 	dimensions = examples[0].states.shape[1]
 	#Build X which is the same for all regressors
 	estimators = []	
-
 	X =np.concatenate([np.hstack((example.states[:-1,:],example.actions[:-1,:])) for example in train_examples],axis = 0)
 	y =np.concatenate([example.states[1:,:] for example in train_examples],axis = 0)
-
-
 	estimators = [adaboost_reg(X,y[:,i],num_learners,tree_depth) for i in range(dimensions)]
-	
 	return estimators
 
 
@@ -52,7 +48,7 @@ def get_dataset(examples):
 	next_data = []
 	for example in examples:
 		for n, step in enumerate(example.states[:-1]):
-			next_kin .append(staticGroupSimple2(step,example.actions[n+1],0.033))
+			next_kin.append(staticGroupSimple2(step,example.actions[n],0.129))
 			next_data.append(example.states[n+1])
 			#if np.sin((np.absolute(np.array(next_kin)[-1,0]-np.array(next_data)[-1,0]))/2) >0.1:
 			#	print np.array(next_kin)[-1,:]
@@ -68,10 +64,22 @@ def get_dataset(examples):
 	for i in range(len(diff[:,0])):
 		if np.absolute(diff[i,0]) >0.2:
 			diff[i,0] = 0
-	X =np.concatenate([np.hstack((example.states[:-1,:],example.actions[1:,:])) for example in examples],axis = 0)
+	X =np.concatenate([np.hstack((example.states[:-1,:],example.actions[:-1,:])) for example in examples],axis = 0)
 	return X,diff	
 
 def learn_correction(num_learners,tree_depth):
+	def plot_fit():
+		f,axarr = plt.subplots(2,sharex=True)
+		x = range(diff_test.shape[0])
+		axarr[0].plot(x,diff_test[:,0]) 
+		axarr[0].plot(x,fit[0,:],color='red',alpha = 0.6)
+		axarr[0].set_xlabel("Data Sample")
+		axarr[0].set_ylabel("sin(angle difference)")
+		axarr[1].plot(x,diff_test[:,1]) 
+		axarr[1].plot(x,fit[1,:],color='red',alpha = 0.6)
+		axarr[1].set_xlabel("Data Sample")
+		axarr[1].set_ylabel("Distance Difference")		
+
 	#learns a transition function from data using adaboost.
 	#------------------------------------------------------
 	#Load all data
@@ -80,7 +88,7 @@ def learn_correction(num_learners,tree_depth):
 	tot_examples = examples[0:12] + examples2[0:12]
 	
 	#Folds get generated here
-	train_examples = tot_examples[0::]
+	train_examples = tot_examples
 	test_examples = tot_examples[0:5]
 	X_train,diff_train = get_dataset(train_examples)
 	X_test,diff_test = get_dataset(test_examples)
@@ -98,10 +106,9 @@ def learn_correction(num_learners,tree_depth):
 	fit = np.array([estimator.predict(X_test) for estimator in estimators])
 	print fit.shape
 	#fit[:,0] =np.arcsin(fit[:,0])*2
-	x = range(diff_test.shape[0])
-	plt.plot(x,diff_test[:,0]) 
-	plt.plot(x,fit[0,:],color='red',alpha = 0.6)
-	plt.show()
+
+	#plot_fit()
+
 	return estimators
 
 

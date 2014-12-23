@@ -13,9 +13,9 @@ def adaboost_class(x,y,estimators,depth):
 def adaboost_reg(x,y,estimators,depth):
 	alpha = 0.9
 	reg = GradientBoostingRegressor(loss='huber', alpha=alpha,
-                                n_estimators=300, max_depth=6,subsample = 0.5,
+                                n_estimators=300, max_depth=15,subsample = 0.1,
                                 learning_rate=0.1, min_samples_leaf=2,
-                                min_samples_split=5)
+                                min_samples_split=5,verbose=0)
 	reg.fit(x,y)
 	return reg
 

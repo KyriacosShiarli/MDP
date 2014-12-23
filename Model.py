@@ -5,7 +5,7 @@ import time
 import scipy.spatial as spat
 from dataload import extract_info
 from kinematics import staticGroupSimple,staticGroupSimple2
-from learn_transition import learn_tran,loss_augmentation,learn_tran_regression,predict_next
+from learn_transition import learn_tran,loss_augmentation,learn_correction,predict_next
 
 class Transition(object):
 	def __init__(self):
@@ -19,10 +19,10 @@ class Model(object):
 		self.disc = discretisation#discretisation model
 		#self.kinematics = kin_model
 		self.w = reward_weights
-		self.buildTransitionFunction(2,learn=True)
 		self.buildFeatureFunction()
+		self.buildTransitionFunction(10, learn=False)
+
 		self.buildRewardFunction()
-		print self.transition_f.shape
 	def buildTransitionFunction(self,bin_samples,learn =True):
 		def transition_smart():
 			self.transition = Transition()
@@ -34,12 +34,14 @@ class Model(object):
 			for i in idx:
 				self.transition.backward[i[0] + i[1]*tot_actions][str(i[2])] = transition_f[i[0],i[1],i[2]]
 				self.transition.forward[i[0] + i[2]*tot_actions][str(i[1])] = transition_f[i[0],i[1],i[2]]
+			print self.transition.backward
 		#print "Got Here estemated"	
 		transition_f = np.zeros([self.disc.tot_actions,self.disc.tot_states,self.disc.tot_states])
 		transtion_test = np.zeros([self.disc.tot_actions,self.disc.tot_states,self.disc.tot_states])
+		estimators = learn_correction(10,10)
 		for i in xrange(self.disc.tot_states):
 			for j in xrange(self.disc.tot_actions):
-				bins = self.disc.stateToBins(i)
+				bins = self.disc.stateToBins(i)	
 				for k in xrange(bin_samples):
 					assert bin_samples != 0
 					if bin_samples==1:
@@ -48,7 +50,9 @@ class Model(object):
 						samp = True
 					quantity = self.disc.binsToQuantity(bins,sample = samp)
 					action = self.disc.indexToAction(j)
-					next_quantity = staticGroupSimple2(quantity,action)
+					correction = predict_next(quantity,action,estimators)
+					correction[0] = np.arcsin(correction[0])*2
+					next_quantity = staticGroupSimple2(quantity,action) - correction
 					#next_quantity2 = staticGroupSimple2(quantity,action)
 					#if np.sum(next_quantity[:1]-next_quantity2[:1])>1:
 					#	print "Quantity",quantity
@@ -56,7 +60,7 @@ class Model(object):
 					#	print next_quantity[:2],next_quantity2[:2]
 					next_state = self.disc.quantityToState(next_quantity)
 					#next2 = self.disc.quantityToState(next_quantity2)
-					#print "state",i
+					#print "state",ic
 					#print "actions",j
 					transition_f[j,i,next_state] += 1
 		if learn ==True:
@@ -74,6 +78,7 @@ class Model(object):
 				features = self.disc.quantityToFeature(state_quantity,action_quantity) #Still hacky. Need to find a solution to his
 				if i == 0 and j == 0: feature_f = np.zeros([self.disc.tot_actions,self.disc.tot_states,len(features)])
 				feature_f[j,i,:] = features
+				#print features
 	 	self.feature_f = feature_f
 	def buildRewardFunction(self):
 		self.reward_f= np.dot(self.feature_f,self.w)
@@ -138,6 +143,7 @@ class Model_non_linear(object):
 		self.transition_f = transition_f
 		transition_smart()
 	def buildFeatureFunction(self):
+		counter = 0
 		for i in xrange(self.disc.tot_states):
 			state_quantity = self.disc.stateToQuantity(i)
 			for j in xrange(self.disc.tot_actions):
@@ -145,6 +151,11 @@ class Model_non_linear(object):
 				features = self.disc.quantityToFeature(state_quantity,action_quantity) #Still hacky. Need to find a solution to this
 				if i == 0 and j == 0: feature_f = np.zeros([self.disc.tot_actions,self.disc.tot_states,len(features)])
 				feature_f[j,i,:] = features
+				print features
+				if features[-1]==1:
+					counter+=1
+					print counter
+		print counter
 	 	self.feature_f = feature_f
 	def buildRewardFunction(self):
 		self.reward_f = -1*np.ones([self.disc.tot_actions,self.disc.tot_states])
@@ -166,7 +177,7 @@ class Model_non_linear(object):
 
 
 if __name__ == "__main__":
-	w = [-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1.,-1,-1,-1.,-1.,-1,-1,-1.,-1.,-1]
+	w =[-1.,-0.6,-1.8,-1.5,-1.3,-1.2,-1.,-1.,-1.,-1.,-0.7,-1.,-1.,-1,-1,-1.,-1.,-1,-1,-1.,-1.,-0.6,-1,-1]
 	d = DiscModel()
 	m = Model(d,w)
 	#for i in m.feature_f:
