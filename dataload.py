@@ -125,7 +125,7 @@ def loadFile3(name):
 	for example1, example2 in itertools.izip_longest(examples_p1,examples_p2):
 		avg_ang =(np.array(map(angle_half_to_full,example1.states[:,0])) +np.array(map(angle_half_to_full,example2.states[:,0])))/2
 		example1.states =  c_o_m([example1.states,example2.states])
-		print example1.states[1:3]
+	
 
 		#example1.com =  np.array(com)
 		#example1.states[:,0] =np.array(map(angle_full_to_half, avg_ang))

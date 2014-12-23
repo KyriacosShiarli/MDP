@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from dataload import loadFile,loadFile2,loadFile3
 from fg_gradient import adaboost_reg
+from kinematics import staticGroupSimple2
+from functions import *
 
 def learn_tran():
 	#examples = loadFile2()
@@ -43,6 +45,66 @@ def learn_tran_regression(num_learners,tree_depth):
 	estimators = [adaboost_reg(X,y[:,i],num_learners,tree_depth) for i in range(dimensions)]
 	
 	return estimators
+
+
+def get_dataset(examples):
+	next_kin = []
+	next_data = []
+	for example in examples:
+		for n, step in enumerate(example.states[:-1]):
+			next_kin .append(staticGroupSimple2(step,example.actions[n+1],0.033))
+			next_data.append(example.states[n+1])
+			#if np.sin((np.absolute(np.array(next_kin)[-1,0]-np.array(next_data)[-1,0]))/2) >0.1:
+			#	print np.array(next_kin)[-1,:]
+			#	print np.array(next_data)[-1,:]
+			#	print step,example.actions[n+1]
+			#	print example.states[n+2]
+			#	print '-------------------------------------------'
+	next_kin = np.array(next_kin)
+	next_data = np.array(next_data)
+	diff = next_kin-next_data
+	diff[:,0] = np.sin(diff[:,0]/2)
+	#simple filter
+	for i in range(len(diff[:,0])):
+		if np.absolute(diff[i,0]) >0.2:
+			diff[i,0] = 0
+	X =np.concatenate([np.hstack((example.states[:-1,:],example.actions[1:,:])) for example in examples],axis = 0)
+	return X,diff	
+
+def learn_correction(num_learners,tree_depth):
+	#learns a transition function from data using adaboost.
+	#------------------------------------------------------
+	#Load all data
+	examples = loadFile3("data/UPO/Experiments Folder/2014-11-17 11.08.31 AM/")
+	examples2 = loadFile3("data/UPO/Experiments Folder/2014-11-28 01.22.03 PM/") 
+	tot_examples = examples[0:12] + examples2[0:12]
+	
+	#Folds get generated here
+	train_examples = tot_examples[0::]
+	test_examples = tot_examples[0:5]
+	X_train,diff_train = get_dataset(train_examples)
+	X_test,diff_test = get_dataset(test_examples)
+	#plt.show()
+	#test_examples = tot_examples[-2::]
+	dimensions = examples[0].states.shape[1]
+	print 'Dimentions',dimensions
+	#Build X which is the same for all regressors
+	#y =np.concatenate([example.states[1:,:] for example in train_examples],axis = 0)
+	estimators = [adaboost_reg(X_train,diff_train[:,i],num_learners,tree_depth) for i in range(dimensions)]
+	fit = []
+	#for example in train_examples:
+	#	for n, step in enumerate(example.states[:-1]):
+	#		fit.append(predict_next(step,exax]mple.actions[n+1],estimators))
+	fit = np.array([estimator.predict(X_test) for estimator in estimators])
+	print fit.shape
+	#fit[:,0] =np.arcsin(fit[:,0])*2
+	x = range(diff_test.shape[0])
+	plt.plot(x,diff_test[:,0]) 
+	plt.plot(x,fit[0,:],color='red',alpha = 0.6)
+	plt.show()
+	return estimators
+
+
 
 def predict_next(state,action,estimators):
 	sa = np.hstack((state,action))
@@ -89,11 +151,12 @@ plt.legend([h1,h2],["bad","good"],bbox_to_anchor=(1., 1,0.,-0.06),loc=1)
 plt.show()
 '''
 if __name__ == "__main__":
-	est = learn_tran_regression(20,10)
-	state = np.array([1,2,0.1,0.4])
-	action = np.array([0.3,0.4])
-	out = predict_next(state,action,est)
-	print out
+	#est = learn_tran_regression(20,10)
+	#state = np.array([1,2,0.1,0.4])
+	#action = np.array([0.3,0.4])
+	#out = predict_next(state,action,est)
+	#print out
+	est = learn_correction(300,10)
 
 
 
